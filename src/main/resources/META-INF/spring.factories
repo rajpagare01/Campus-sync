@@ -1,0 +1,1 @@
+org.springframework.boot.env.EnvironmentPostProcessor=com.campussync.backend.config.DotenvEnvironmentPostProcessor
