@@ -23,7 +23,9 @@ target/
 *.iws
 *.iml
 *.ipr
-
+*.txt
+*.md
+!README.md
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
