@@ -1,0 +1,579 @@
+{
+  "info": {
+    "name": "CampusSync - Home Feed Testing",
+    "description": "Complete API testing collection for CampusSync Home Feed System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "jwt_token",
+      "value": ""
+    },
+    {
+      "key": "society_email",
+      "value": "society@example.com"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Setup Test Data",
+      "item": [
+        {
+          "name": "Register & Login Society User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Society Test User\",\n  \"email\": \"{{society_email}}\",\n  \"password\": \"password123\",\n  \"role\": \"SOCIETY\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Verify Society Email",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/verify?email={{society_email}}&code=123456&name=Society%20Test%20User",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify"],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "{{society_email}}"
+                },
+                {
+                  "key": "code",
+                  "value": "123456"
+                },
+                {
+                  "key": "name",
+                  "value": "Society Test User"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login Society User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('jwt_token', response);",
+                  "    console.log('Society JWT Token saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{society_email}}\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Create Test Post 1",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"🎓 Welcome to the new semester! We're excited to announce our upcoming events and activities. Stay tuned for more updates! #CampusLife\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/posts",
+              "host": ["{{base_url}}"],
+              "path": ["posts"]
+            }
+          }
+        },
+        {
+          "name": "Create Test Post 2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"📚 Study group forming for Data Structures! Join us every Tuesday at 3 PM in Room 201. Let's ace those exams together! 📖✨\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/posts",
+              "host": ["{{base_url}}"],
+              "path": ["posts"]
+            }
+          }
+        },
+        {
+          "name": "Create Test Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Tech Workshop 2026\",\n  \"description\": \"Learn the latest in web development technologies. Perfect for students interested in modern frameworks and tools.\",\n  \"venue\": \"Computer Lab A\",\n  \"date\": \"2026-05-15T14:00:00\",\n  \"type\": \"SOCIETY\",\n  \"paid\": false,\n  \"price\": 0.0\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/events",
+              "host": ["{{base_url}}"],
+              "path": ["events"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📱 Home Feed Testing",
+      "item": [
+        {
+          "name": "Get Full Feed (All Items)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/feed?page=0&size=10&filter=all&sort=date",
+              "host": ["{{base_url}}"],
+              "path": ["feed"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "filter",
+                  "value": "all"
+                },
+                {
+                  "key": "sort",
+                  "value": "date"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Posts Only",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/feed?page=0&size=10&filter=posts&sort=date",
+              "host": ["{{base_url}}"],
+              "path": ["feed"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "filter",
+                  "value": "posts"
+                },
+                {
+                  "key": "sort",
+                  "value": "date"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Events Only",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/feed?page=0&size=10&filter=events&sort=date",
+              "host": ["{{base_url}}"],
+              "path": ["feed"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "filter",
+                  "value": "events"
+                },
+                {
+                  "key": "sort",
+                  "value": "date"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sort by Engagement",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/feed?page=0&size=10&filter=all&sort=engagement",
+              "host": ["{{base_url}}"],
+              "path": ["feed"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "filter",
+                  "value": "all"
+                },
+                {
+                  "key": "sort",
+                  "value": "engagement"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Pagination Test (Page 1)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/feed?page=1&size=5&filter=all&sort=date",
+              "host": ["{{base_url}}"],
+              "path": ["feed"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                },
+                {
+                  "key": "filter",
+                  "value": "all"
+                },
+                {
+                  "key": "sort",
+                  "value": "date"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Feed Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/feed/stats",
+              "host": ["{{base_url}}"],
+              "path": ["feed", "stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "❤️ Test Engagement Scoring",
+      "item": [
+        {
+          "name": "Like a Post to Test Engagement",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/posts/1/like",
+              "host": ["{{base_url}}"],
+              "path": ["posts", "1", "like"]
+            }
+          }
+        },
+        {
+          "name": "Check Feed with Engagement Sort",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/feed?page=0&size=10&filter=all&sort=engagement",
+              "host": ["{{base_url}}"],
+              "path": ["feed"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "filter",
+                  "value": "all"
+                },
+                {
+                  "key": "sort",
+                  "value": "engagement"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔧 Alternative Endpoints",
+      "item": [
+        {
+          "name": "Posts Feed (/feed/posts)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/feed/posts?page=0&size=10&sort=date",
+              "host": ["{{base_url}}"],
+              "path": ["feed", "posts"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sort",
+                  "value": "date"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Events Feed (/feed/events)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/feed/events?page=0&size=10&sort=date",
+              "host": ["{{base_url}}"],
+              "path": ["feed", "events"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "10"
+                },
+                {
+                  "key": "sort",
+                  "value": "date"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "❌ Error Testing",
+      "item": [
+        {
+          "name": "Invalid Filter Parameter",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/feed?page=0&size=10&filter=invalid&sort=date",
+              "host": ["{{base_url}}"],
+              "path": ["feed"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "filter",
+                  "value": "invalid"
+                },
+                {
+                  "key": "sort",
+                  "value": "date"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Invalid Sort Parameter",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/feed?page=0&size=10&filter=all&sort=invalid",
+              "host": ["{{base_url}}"],
+              "path": ["feed"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "filter",
+                  "value": "all"
+                },
+                {
+                  "key": "sort",
+                  "value": "invalid"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Negative Page Number",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/feed?page=-1&size=10&filter=all&sort=date",
+              "host": ["{{base_url}}"],
+              "path": ["feed"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "-1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "filter",
+                  "value": "all"
+                },
+                {
+                  "key": "sort",
+                  "value": "date"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Oversized Page Size",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/feed?page=0&size=100&filter=all&sort=date",
+              "host": ["{{base_url}}"],
+              "path": ["feed"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "100"
+                },
+                {
+                  "key": "filter",
+                  "value": "all"
+                },
+                {
+                  "key": "sort",
+                  "value": "date"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

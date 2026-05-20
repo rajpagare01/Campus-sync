@@ -1,0 +1,428 @@
+═══════════════════════════════════════════════════════════════════════════════
+                  🚀 PHASE 5.4: PAYMENT INTEGRATION PLAN 🚀
+                        COMPREHENSIVE PLANNING COMPLETE ✅
+═══════════════════════════════════════════════════════════════════════════════
+
+📊 PROJECT STATUS
+═══════════════════════════════════════════════════════════════════════════════
+Current Completion:     ✅ 85% (Phase 5.3 Complete)
+Phase 5.4 Target:       🎯 90% (Payment Integration)
+Files to Create:        📝 14 Production + 2 Tests + 4 Documentation
+Estimated Duration:     ⏰ 17 hours of focused work (2-3 days)
+
+🎯 PHASE 5.4 FEATURES
+═══════════════════════════════════════════════════════════════════════════════
+✨ Feature 1: Dual Payment Gateway Support
+   • Stripe integration with Payment Intents API
+   • Razorpay integration with Orders API
+   • Automatic gateway selection
+   • Fallback support
+
+✨ Feature 2: Complete Order Management
+   • Order creation and real-time tracking
+   • Multi-status order lifecycle management
+   • Refund processing and validation
+   • Order history for users
+
+✨ Feature 3: Secure Payment Processing
+   • PCI-DSS compliant (zero card data storage)
+   • Webhook signature verification
+   • Idempotency keys (prevent duplicate charges)
+   • HTTPS enforcement
+   • Audit logging
+
+✨ Feature 4: User Experience
+   • Automatic event registration after payment
+   • PDF receipt/invoice generation
+   • Email confirmations and updates
+   • Easy refund processing
+
+📁 DETAILED DELIVERABLES
+═══════════════════════════════════════════════════════════════════════════════
+
+Production Code (14 files):
+────────────────────────────────────────────────────────────────────────────────
+Models (2 files):
+  1. Model/Order.java (60 lines)
+     - JPA entity with relationships, status tracking, refund details
+  2. Model/OrderStatus.java (10 lines)
+     - Enum: PENDING, PROCESSING, COMPLETED, FAILED, REFUNDED
+
+DTOs (4 files):
+  3. Dto/PaymentRequestDto.java (25 lines)
+     - Event ID, quantity, amount, payment method
+  4. Dto/PaymentResponseDto.java (30 lines)
+     - Order ID, payment ID, status, amount, error messages
+  5. Dto/OrderDto.java (40 lines)
+     - Order details with event and user info
+  6. Dto/ReceiptDto.java (35 lines)
+     - Receipt details for PDF generation
+
+Repositories (2 files):
+  7. Repository/OrderRepository.java (45 lines)
+     - Custom queries: findByUserId, findByEventId, findByStatus
+     - Aggregation queries for analytics
+  8. Repository/PaymentWebhookLogRepository.java (25 lines)
+     - Webhook event logging for debugging
+
+Services (4 files):
+  9. Service/PaymentService.java (abstract, 50 lines)
+     - Interface/abstract class for payment abstraction
+     - Shared logic for both gateway implementations
+  
+  10. Service/StripePaymentService.java (350 lines)
+      - Create Payment Intent
+      - Confirm payment
+      - Process refunds
+      - Handle Stripe webhook events (payment_intent.succeeded, charge.refunded)
+      - Error handling and retry logic
+  
+  11. Service/RazorpayPaymentService.java (350 lines)
+      - Create orders
+      - Verify payment signatures
+      - Process refunds
+      - Handle Razorpay webhook events (payment.authorized, refund.created)
+      - Error handling and retry logic
+  
+  12. Service/OrderService.java (300 lines)
+      - Create orders from payment requests
+      - Update order status from webhook events
+      - Process refunds with validation
+      - Auto-create event registrations
+      - Send email confirmations
+
+Controller (1 file):
+  13. Controller/PaymentController.java (250 lines)
+      - POST /api/payments/create → Initiate payment
+      - POST /api/payments/webhook/stripe → Stripe webhook
+      - POST /api/payments/webhook/razorpay → Razorpay webhook
+      - GET /api/orders → List user's orders
+      - GET /api/orders/{orderId} → Get order details
+      - POST /api/orders/{orderId}/refund → Request refund
+      - GET /api/receipts/{orderId} → Download receipt PDF
+
+Configuration (1 file):
+  14. Config/PaymentConfig.java (80 lines)
+      - Initialize Stripe and Razorpay clients
+      - Setup webhook validation
+      - Configure rest template for APIs
+
+Test Code (2 files):
+────────────────────────────────────────────────────────────────────────────────
+  1. Test/Service/PaymentServiceTest.java (300 lines, 12+ tests)
+     - Test Stripe payment creation
+     - Test Razorpay payment creation
+     - Test payment confirmation logic
+     - Test refund processing
+     - Test error scenarios (insufficient funds, expired card, etc.)
+     - Mock external payment gateway APIs
+
+  2. Test/Controller/PaymentControllerTest.java (250 lines, 10+ tests)
+     - Test all 7 REST endpoints
+     - Test webhook signature verification
+     - Test input validation
+     - Test authentication/authorization
+     - Test error responses
+
+Documentation (4 files):
+────────────────────────────────────────────────────────────────────────────────
+  1. PHASE_5_4_IMPLEMENTATION_GUIDE.md (30 KB)
+     - Step-by-step implementation walkthrough
+     - Code examples and best practices
+     - Architecture diagrams (ASCII)
+     - Error handling patterns
+     - Database schema details
+
+  2. STRIPE_RAZORPAY_SETUP.md (15 KB)
+     - Stripe account setup and configuration
+     - Razorpay account setup and configuration
+     - API key management
+     - Webhook configuration instructions
+     - Testing in sandbox mode
+     - Production deployment checklist
+
+  3. PAYMENT_API_REFERENCE.md (10 KB)
+     - Complete API endpoint documentation
+     - Request and response examples (JSON)
+     - Error codes and messages
+     - Rate limits and quotas
+     - Security headers required
+
+  4. PHASE_5_4_COMPLETION_SUMMARY.md (8 KB)
+     - Implementation summary
+     - Test execution results
+     - Code coverage metrics
+     - Production readiness checklist
+
+Files to Modify (5 files):
+────────────────────────────────────────────────────────────────────────────────
+  1. pom.xml
+     - Add stripe-java (v27+)
+     - Add razorpay-java (v2.1+)
+     - Add itext7-pdf or pdfbox for PDF generation
+     - Add gson for JSON processing
+
+  2. application.properties
+     - Add stripe.api-key (from environment)
+     - Add stripe.webhook-secret
+     - Add razorpay.key-id
+     - Add razorpay.key-secret
+     - Add payment.webhook-secret
+
+  3. application-test.properties
+     - Add test payment gateway credentials
+     - Add test webhook secrets
+
+  4. Service/RegistrationService.java
+     - Add method: createBulkRegistrations(orderId)
+     - Link with OrderService after payment success
+
+  5. Service/EmailService.java (if exists)
+     - Add email template: payment-confirmation.html
+     - Add email template: refund-confirmation.html
+
+🔄 PAYMENT FLOW DIAGRAMS
+═══════════════════════════════════════════════════════════════════════════════
+
+Creating Order & Initiating Payment:
+  User → /api/payments/create
+     ↓
+  OrderService: Create Order (status: PENDING)
+     ↓
+  PaymentService: Create payment intent/order on gateway
+     ↓
+  API Response: {orderId, clientSecret/paymentLink}
+     ↓
+  User: Redirected to payment form
+
+Confirming Payment (via Webhook):
+  Payment Gateway → Webhook: POST /api/payments/webhook/{gateway}
+     ↓
+  Validate: Verify webhook signature
+     ↓
+  PaymentService: Extract payment details
+     ↓
+  OrderService: Update Order (status: COMPLETED)
+     ↓
+  RegistrationService: Create event registrations
+     ↓
+  EmailService: Send confirmation email
+     ↓
+  Success: Order complete, user can access event
+
+Requesting Refund:
+  User → /api/orders/{orderId}/refund
+     ↓
+  OrderService: Validate refund eligibility
+     ↓
+  PaymentService: Process refund on gateway
+     ↓
+  OrderService: Update Order (status: REFUNDED)
+     ↓
+  RegistrationService: Cancel event registrations
+     ↓
+  EmailService: Send refund confirmation
+     ↓
+  Success: Refund processed (2-5 business days)
+
+🔐 SECURITY MEASURES
+═══════════════════════════════════════════════════════════════════════════════
+✅ PCI-DSS Compliance
+   - Zero storage of card data
+   - All card processing via payment gateway
+   - Encryption in transit (HTTPS)
+
+✅ Webhook Security
+   - Signature verification on every webhook
+   - Timestamp validation (prevent replay attacks)
+   - Webhook logs for audit trail
+
+✅ Payment Security
+   - Idempotency keys to prevent duplicate charges
+   - Timeout handling with proper state recovery
+   - Network failure recovery
+
+✅ API Security
+   - Rate limiting on payment endpoints (10 req/min per user)
+   - CSRF protection
+   - Input validation on all fields
+   - Authentication required for all endpoints
+
+✅ Data Security
+   - API keys in environment variables (never hardcoded)
+   - Sensitive data encrypted in database
+   - Audit logging for all operations
+
+✅ Error Handling
+   - No sensitive info in error messages
+   - Proper HTTP status codes
+   - Structured error responses
+
+📋 TASK BREAKDOWN & TIME ESTIMATES
+═══════════════════════════════════════════════════════════════════════════════
+1. Setup & Configuration
+   Tasks: Add dependencies, create PaymentConfig, update properties
+   Time:  2 hours
+   Files: pom.xml, PaymentConfig.java, properties
+
+2. Data Models & DTOs
+   Tasks: Create Order entity, OrderStatus enum, 4 DTOs
+   Time:  1.5 hours
+   Files: Order.java, OrderStatus.java, 4 DTO files
+
+3. Repositories
+   Tasks: Create OrderRepository with queries, PaymentWebhookLogRepository
+   Time:  1 hour
+   Files: 2 Repository files
+
+4. Payment Services
+   Tasks: Create abstract PaymentService, Stripe impl, Razorpay impl
+   Time:  4 hours (2 hours per implementation)
+   Files: 3 Service files (400+ lines each)
+
+5. Order Service
+   Tasks: Business logic for orders, refunds, registrations, emails
+   Time:  2 hours
+   Files: 1 OrderService file (300 lines)
+
+6. Payment Controller
+   Tasks: 7 REST endpoints, webhook handlers, validation
+   Time:  2 hours
+   Files: 1 PaymentController file (250 lines)
+
+7. Comprehensive Testing
+   Tasks: 20+ test cases, payment mocks, webhook testing
+   Time:  3 hours
+   Files: 2 Test files (550+ lines)
+
+8. Documentation
+   Tasks: Implementation guide, API reference, setup instructions
+   Time:  2 hours
+   Files: 4 Documentation files (63+ KB)
+
+9. Integration & Verification
+   Tasks: Build verification, test execution, end-to-end payment flow
+   Time:  1.5 hours
+   Files: None (verification phase)
+
+TOTAL: 17 hours (spread over 2-3 days)
+
+✅ SUCCESS CRITERIA CHECKLIST
+═══════════════════════════════════════════════════════════════════════════════
+
+Code Implementation:
+  ☐ All 14 production files created
+  ☐ All 5 files modified
+  ☐ Zero compilation errors
+  ☐ Code follows project conventions
+  ☐ All classes properly documented
+
+Testing (20+ test cases):
+  ☐ Payment creation tests pass
+  ☐ Refund tests pass
+  ☐ Webhook handling tests pass
+  ☐ Error scenario tests pass
+  ☐ 85%+ code coverage achieved
+
+Documentation:
+  ☐ Implementation guide complete (30 KB)
+  ☐ Setup guide complete (15 KB)
+  ☐ API reference complete (10 KB)
+  ☐ Completion summary complete (8 KB)
+
+Integration:
+  ☐ Stripe integration working
+  ☐ Razorpay integration working
+  ☐ Webhooks verified and working
+  ☐ Auto-registration working
+  ☐ Email confirmations sent
+  ☐ Refund flow working
+
+Deployment:
+  ☐ No database migrations needed
+  ☐ All dependencies in pom.xml
+  ☐ Configuration externalized
+  ☐ Logging configured
+  ☐ Production-ready code
+
+📚 REQUIRED DEPENDENCIES (to add to pom.xml)
+═══════════════════════════════════════════════════════════════════════════════
+<!-- Stripe Payment Gateway -->
+<dependency>
+    <groupId>com.stripe</groupId>
+    <artifactId>stripe-java</artifactId>
+    <version>27.2.0</version>
+</dependency>
+
+<!-- Razorpay Payment Gateway -->
+<dependency>
+    <groupId>com.razorpay</groupId>
+    <artifactId>razorpay-java</artifactId>
+    <version>2.1.3</version>
+</dependency>
+
+<!-- PDF Generation -->
+<dependency>
+    <groupId>com.itextpdf</groupId>
+    <artifactId>itext7-core</artifactId>
+    <version>7.2.5</version>
+</dependency>
+
+<!-- JSON Processing -->
+<dependency>
+    <groupId>com.google.code.gson</groupId>
+    <artifactId>gson</artifactId>
+    <version>2.10.1</version>
+</dependency>
+
+📈 PROJECT ROADMAP
+═══════════════════════════════════════════════════════════════════════════════
+✅ Phase 1-4:    62.5% → COMPLETE (User auth, events, social, perf, security)
+✅ Phase 5.1:    75%   → COMPLETE (WebSocket Real-time Notifications)
+✅ Phase 5.2:    80%   → COMPLETE (Elasticsearch Search)
+✅ Phase 5.3:    85%   → COMPLETE (Analytics Dashboard)
+⏳ Phase 5.4:    90%   → PAYMENT INTEGRATION (READY TO START)
+⏳ Phase 5.5:    95%   → Mobile Optimization (NEXT AFTER 5.4)
+
+Next Phase After 5.4:
+  Phase 5.5: Mobile Optimization
+  - Push notification tokens
+  - Device management
+  - Mobile-specific APIs
+  - Offline support
+
+🎯 NEXT STEPS
+═══════════════════════════════════════════════════════════════════════════════
+1. Review the implementation plan:
+   - Location: C:\Users\asus\.copilot\session-state\...\PHASE_5_4_PLAN.md
+   - Location: C:\Users\asus\Downloads\backend\backend\PHASE_5_4_PLAN_SUMMARY.md
+
+2. When ready to start implementation:
+   - Execute Phase 5.4 following task breakdown order
+   - Start with Setup & Configuration (dependencies)
+   - Follow through each step systematically
+
+3. Expected timeline:
+   - Setup: 2 hours
+   - Core implementation: 11 hours
+   - Testing: 3 hours
+   - Documentation & verification: 2 hours
+
+4. Final outcome:
+   - ✅ Secure payment processing with Stripe & Razorpay
+   - ✅ Complete order management system
+   - ✅ 20+ test cases with 85%+ coverage
+   - ✅ Production-ready code
+   - ✅ 90% project completion
+
+═══════════════════════════════════════════════════════════════════════════════
+                    PHASE 5.4 PLAN CREATION: COMPLETE ✅
+                         Ready for Implementation
+═══════════════════════════════════════════════════════════════════════════════
+
+Status:   📋 COMPREHENSIVE PLAN READY
+Created:  2026-04-06 11:34 UTC
+Progress: 🚀 85% → 90% (Payment Integration)
+Todos:    9 tasks ready for tracking
+
+When you're ready to implement Phase 5.4, just confirm and we'll begin!
