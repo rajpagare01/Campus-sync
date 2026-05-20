@@ -43,6 +43,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/events/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/events/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/follow/stats/**").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/follow/stats/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/*/profile").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/*/profile").permitAll()
