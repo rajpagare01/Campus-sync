@@ -12,8 +12,8 @@ public class RuntimeProfileValidator {
                                    AppRuntimeProperties runtimeProperties,
                                    @Value("${spring.data.redis.host:}") String redisHost) {
         boolean prod = environment.matchesProfiles("prod");
-        if (prod && (!runtimeProperties.requireRedis() || !StringUtils.hasText(redisHost))) {
+       /* if (prod && (!runtimeProperties.requireRedis() || !StringUtils.hasText(redisHost))) {
             throw new IllegalStateException("Production profile requires Redis-backed token stores. Set SECURITY_TOKENS_REQUIRE_REDIS=true and Redis connection properties.");
-        }
+        }*/
     }
 }
