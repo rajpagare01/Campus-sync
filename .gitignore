@@ -23,7 +23,8 @@ target/
 *.iws
 *.iml
 *.ipr
-*.json
+*.postman_collection.json
+*_Testing*.json
 *.sh
 *.sql
 *.txt
