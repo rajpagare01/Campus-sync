@@ -53,7 +53,7 @@ class FeedServiceTest {
         when(likeService.getLikeCount(1L)).thenReturn(2);
         when(likeService.hasUserLikedPost(1L)).thenReturn(true);
 
-        List<FeedItem> feed = feedService.getHomeFeed(0, 20, "posts", "date");
+        var feed = feedService.getHomeFeed(0, 20, "posts", "date").getContent();
 
         assertThat(feed).hasSize(1);
         assertThat(feed.get(0).getCommentCount()).isEqualTo(3);

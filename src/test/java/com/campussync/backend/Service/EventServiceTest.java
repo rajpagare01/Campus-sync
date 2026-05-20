@@ -81,10 +81,10 @@ class EventServiceTest {
         when(eventRepository.findById(10L)).thenReturn(Optional.of(existing));
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Event response = eventService.updateEvent(10L, update);
+        var response = eventService.updateEvent(10L, update);
 
         assertThat(response.getTitle()).isEqualTo("New title");
-        verify(notificationService).notifyEventUpdate(eq(response), eq("Details updated"));
+        verify(notificationService).notifyEventUpdate(any(Event.class), eq("Details updated"));
     }
 
     @Test
@@ -108,9 +108,9 @@ class EventServiceTest {
         when(eventRepository.findById(10L)).thenReturn(Optional.of(event));
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Event response = eventService.updateEventStatus(10L, EventStatus.PUBLISHED);
+        var response = eventService.updateEventStatus(10L, EventStatus.PUBLISHED);
 
-        assertThat(response.getStatus()).isEqualTo(EventStatus.PUBLISHED);
-        verify(notificationService).notifyEventUpdate(eq(response), eq("Status changed to PUBLISHED"));
+        assertThat(response.getStatus()).isEqualTo(EventStatus.PUBLISHED.name());
+        verify(notificationService).notifyEventUpdate(any(Event.class), eq("Status changed to PUBLISHED"));
     }
 }

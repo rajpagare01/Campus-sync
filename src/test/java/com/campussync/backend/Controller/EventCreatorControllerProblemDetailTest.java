@@ -63,7 +63,7 @@ class EventCreatorControllerProblemDetailTest {
     @Test
     @WithMockUser(username = "creator@example.com", roles = "SOCIETY")
     void checkInConflictReturnsProblemDetail() throws Exception {
-        when(eventParticipantService.checkIn(any()))
+        when(eventParticipantService.checkIn(any(), any()))
                 .thenThrow(new ConflictException("Participant already checked in"));
 
         mockMvc.perform(post("/events/check-in")

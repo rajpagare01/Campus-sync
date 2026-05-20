@@ -48,14 +48,14 @@ class EventControllerSecurityTest {
     @Test
     @WithMockUser(username = "student@example.com", roles = "STUDENT")
     void studentCanCreateEvent() throws Exception {
-        Event response = new Event();
+        com.campussync.backend.Dto.EventResponse response = new com.campussync.backend.Dto.EventResponse();
         response.setId(1L);
         response.setTitle("Student Event");
         response.setDescription("Open to everyone");
         response.setVenue("Auditorium");
         response.setDate(LocalDateTime.of(2026, 4, 21, 10, 0));
-        response.setType(EventType.SOCIETY);
-        response.setStatus(EventStatus.DRAFT);
+        response.setType(com.campussync.backend.Model.EventType.SOCIETY);
+        response.setStatus(com.campussync.backend.Model.EventStatus.DRAFT);
 
         when(eventService.createEvent(any(Event.class))).thenReturn(response);
 

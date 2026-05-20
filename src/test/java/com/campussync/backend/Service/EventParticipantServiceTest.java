@@ -90,7 +90,7 @@ class EventParticipantServiceTest {
         EventCheckInRequest request = new EventCheckInRequest();
         request.setQrCode("qr-token");
 
-        EventCheckInResponse response = eventParticipantService.checkIn(request);
+        EventCheckInResponse response = eventParticipantService.checkIn(12L, request);
 
         assertThat(response.getRegistrationId()).isEqualTo(44L);
         assertThat(response.getUserId()).isEqualTo(2L);
@@ -126,7 +126,7 @@ class EventParticipantServiceTest {
         EventCheckInRequest request = new EventCheckInRequest();
         request.setQrCode("qr-token");
 
-        assertThatThrownBy(() -> eventParticipantService.checkIn(request))
+        assertThatThrownBy(() -> eventParticipantService.checkIn(12L, request))
                 .isInstanceOf(ConflictException.class)
                 .hasMessage("Participant already checked in");
     }

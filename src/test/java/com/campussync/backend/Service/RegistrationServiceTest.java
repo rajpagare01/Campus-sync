@@ -137,7 +137,7 @@ class RegistrationServiceTest {
         when(userRepository.findByEmail("student@example.com")).thenReturn(Optional.of(user));
         when(registrationRepository.findByUserId(1L)).thenReturn(List.of(registration));
 
-        List<UserRegistrationResponse> response = registrationService.getUserRegistrations();
+        List<UserRegistrationResponse> response = registrationService.getUserRegistrations(1L);
 
         assertThat(response).hasSize(1);
         assertThat(response.get(0).getRegistrationId()).isEqualTo(99L);

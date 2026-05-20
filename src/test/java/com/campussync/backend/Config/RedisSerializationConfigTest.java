@@ -17,26 +17,14 @@ class RedisSerializationConfigTest {
     @Test
     void serializesUserProfileResponseWithJavaTimeFields() {
         LocalDateTime now = LocalDateTime.now().withNano(0);
-        UserProfileResponse profile = new UserProfileResponse(
-                1L,
-                "Test User",
-                "test@example.com",
-                Role.STUDENT,
-                "bio",
-                "profile.png",
-                true,
-                now,
-                now,
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                true,
-                false,
-                false
-        );
+        UserProfileResponse profile = new UserProfileResponse();
+        profile.setId(1L);
+        profile.setName("Test User");
+        profile.setEmail("test@example.com");
+        profile.setRole(Role.STUDENT);
+        profile.setBio("bio");
+        profile.setProfilePictureUrl("profile.png");
+        profile.setCreatedAt(now);
 
         Object restored = serializer.deserialize(serializer.serialize(profile));
 
