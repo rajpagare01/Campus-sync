@@ -24,6 +24,8 @@ target/
 *.iml
 *.ipr
 *.json
+*.sh
+*.sql
 *.txt
 *.md
 !README.md
