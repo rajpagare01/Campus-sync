@@ -21,7 +21,6 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.util.StringUtils;
 
 @Configuration
-@Profile("prod")
 public class RedisConfig {
 
     @Value("${spring.data.redis.host:${REDIS_HOST:localhost}}")

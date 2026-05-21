@@ -20,6 +20,9 @@ import java.util.List;
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    @org.springframework.beans.factory.annotation.Value("${cors.allowed-origins:https://campusconnect-feed.vercel.app,http://localhost:3000,http://localhost:5173}")
+    private java.util.List<String> allowedOrigins;
+
     private final JwtUtil jwtUtil;
 
     public WebSocketConfig(JwtUtil jwtUtil) {
@@ -85,14 +88,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws/notifications")
-                .setAllowedOriginPatterns(
-                        "http://localhost:3000",
-                        "http://127.0.0.1:3000",
-                        "http://localhost:3001",
-                        "http://127.0.0.1:3001",
-                        "http://localhost:5173",
-                        "http://127.0.0.1:5173"
-                )
+                .setAllowedOriginPatterns(allowedOrigins.toArray(new String[0]))
                 .withSockJS();
     }
 }

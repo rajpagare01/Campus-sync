@@ -12,7 +12,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Service
-@Profile("prod")
 public class RedisRefreshTokenStore implements RefreshTokenStore {
 
     private static final long REFRESH_TOKEN_TTL_DAYS = 7;

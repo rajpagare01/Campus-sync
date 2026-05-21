@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.Optional;
 
 @Service
-@Profile("prod")
 public class RedisTransientStateStore implements TransientStateStore {
 
     private final RedisTemplate<String, Object> redisTemplate;

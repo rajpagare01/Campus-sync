@@ -8,7 +8,6 @@ import java.time.Duration;
 import java.time.Instant;
 
 @Service
-@Profile("prod")
 public class RedisAccessTokenBlocklistStore implements AccessTokenBlocklistStore {
 
     private final RedisTemplate<String, Object> redisTemplate;

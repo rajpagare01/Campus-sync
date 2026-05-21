@@ -13,20 +13,14 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Value("${cors.allowed-origins:http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173}")
+    @Value("${cors.allowed-origins:https://campusconnect-feed.vercel.app,http://localhost:3000,http://localhost:5173}")
     private List<String> allowedOrigins;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         
-        // Add production UI and wildcard Vercel previews
-        config.setAllowedOriginPatterns(Arrays.asList(
-            "https://campusconnect-feed.vercel.app", 
-            "https://*.vercel.app",
-            "http://localhost:*",
-            "http://127.0.0.1:*"
-        ));
+        config.setAllowedOriginPatterns(allowedOrigins);
         
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"));
