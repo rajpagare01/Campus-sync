@@ -21,11 +21,14 @@ public class EmailDeliveryService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${RESEND_API_KEY:}")
-    private String resendApiKey;
+    @Value("${BREVO_API_KEY:}")
+    private String brevoApiKey;
 
-    @Value("${RESEND_FROM:CampusSync <onboarding@resend.dev>}")
-    private String resendFrom;
+    @Value("${BREVO_SENDER_EMAIL:rajpagare305@gmail.com}")
+    private String brevoSenderEmail;
+
+    @Value("${BREVO_SENDER_NAME:CampusSync}")
+    private String brevoSenderName;
 
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
@@ -38,8 +41,8 @@ public class EmailDeliveryService {
     @Async
     public void deliver(EmailJobMessage job) {
         try {
-            if (resendApiKey != null && !resendApiKey.isBlank()) {
-                deliverViaResend(job);
+            if (brevoApiKey != null && !brevoApiKey.isBlank()) {
+                deliverViaBrevo(job);
             } else if (mailSender != null) {
                 deliverViaSmtp(job);
             } else {
@@ -50,25 +53,34 @@ public class EmailDeliveryService {
         }
     }
 
-    private void deliverViaResend(EmailJobMessage job) throws Exception {
+    private void deliverViaBrevo(EmailJobMessage job) throws Exception {
         String jsonBody = """
                 {
-                  "from": "%s",
-                  "to": ["%s"],
+                  "sender": {
+                    "name": "%s",
+                    "email": "%s"
+                  },
+                  "to": [
+                    {
+                      "email": "%s"
+                    }
+                  ],
                   "subject": "%s",
-                  "text": "%s"
+                  "textContent": "%s"
                 }
                 """.formatted(
-                escapeJson(resendFrom),
+                escapeJson(brevoSenderName),
+                escapeJson(brevoSenderEmail),
                 escapeJson(job.to()),
                 escapeJson(job.subject()),
                 escapeJson(job.body())
         );
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://api.resend.com/emails"))
-                .header("Authorization", "Bearer " + resendApiKey)
-                .header("Content-Type", "application/json")
+                .uri(URI.create("https://api.brevo.com/v3/smtp/email"))
+                .header("api-key", brevoApiKey)
+                .header("accept", "application/json")
+                .header("content-type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                 .timeout(Duration.ofSeconds(15))
                 .build();
@@ -76,10 +88,10 @@ public class EmailDeliveryService {
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() >= 200 && response.statusCode() < 300) {
-            log.info("Email delivered via Resend to {}", job.to());
+            log.info("Email delivered via Brevo to {}", job.to());
         } else {
-            log.error("Resend API error (HTTP {}): {}", response.statusCode(), response.body());
-            throw new RuntimeException("Resend API returned HTTP " + response.statusCode() + ": " + response.body());
+            log.error("Brevo API error (HTTP {}): {}", response.statusCode(), response.body());
+            throw new RuntimeException("Brevo API returned HTTP " + response.statusCode() + ": " + response.body());
         }
     }
 
