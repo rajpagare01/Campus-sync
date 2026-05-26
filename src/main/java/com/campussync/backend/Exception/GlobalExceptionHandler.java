@@ -16,6 +16,9 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -63,6 +66,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ProblemDetail> handleRuntimeException(RuntimeException ex) {
+        log.error("Runtime exception occurred:", ex);
         HttpStatus status = determineRuntimeStatus(ex.getMessage());
         return toResponse(status,
                 ex.getMessage() != null ? ex.getMessage() : "Internal server error",
@@ -71,6 +75,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleGenericException(Exception ex) {
+        log.error("Unhandled generic exception occurred:", ex);
         return toResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", "unexpected-error");
     }
 
