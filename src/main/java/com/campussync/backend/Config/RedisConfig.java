@@ -6,10 +6,12 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import io.lettuce.core.ClientOptions;
+import io.lettuce.core.SocketOptions;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.RedisPassword;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
@@ -20,6 +22,7 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.util.StringUtils;
 
+@Slf4j
 @Configuration
 public class RedisConfig {
 
@@ -43,6 +46,9 @@ public class RedisConfig {
 
     @Bean
     public LettuceConnectionFactory redisConnectionFactory() {
+        log.info("Configuring Redis: host={}, port={}, ssl={}, timeout={}, username={}",
+                host, port, sslEnabled, timeout, StringUtils.hasText(username) ? username : "(none)");
+
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
         config.setHostName(host);
         config.setPort(port);
@@ -55,14 +61,32 @@ public class RedisConfig {
             config.setPassword(RedisPassword.of(password));
         }
 
+        // Add socket-level connect timeout so connections fail fast
+        // instead of hanging forever when Redis is unreachable
+        SocketOptions socketOptions = SocketOptions.builder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .keepAlive(true)
+                .build();
+
+        ClientOptions clientOptions = ClientOptions.builder()
+                .socketOptions(socketOptions)
+                .build();
+
         LettuceClientConfiguration.LettuceClientConfigurationBuilder clientConfig =
-                LettuceClientConfiguration.builder().commandTimeout(timeout);
+                LettuceClientConfiguration.builder()
+                        .commandTimeout(timeout)
+                        .clientOptions(clientOptions);
 
         if (sslEnabled) {
-            clientConfig.useSsl();
+            clientConfig.useSsl().disablePeerVerification();
         }
 
-        return new LettuceConnectionFactory(config, clientConfig.build());
+        LettuceConnectionFactory factory = new LettuceConnectionFactory(config, clientConfig.build());
+
+        // Test connectivity eagerly on startup
+        factory.setEagerInitialization(true);
+
+        return factory;
     }
 
     @Bean
