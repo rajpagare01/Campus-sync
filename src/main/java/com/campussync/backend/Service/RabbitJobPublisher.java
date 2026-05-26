@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @ConditionalOnProperty(name = "app.jobs.mode", havingValue = "rabbit")
-public class RabbitJobPublisher {
+public class RabbitJobPublisher implements JobPublisher {
 
     private final RabbitTemplate rabbitTemplate;
 

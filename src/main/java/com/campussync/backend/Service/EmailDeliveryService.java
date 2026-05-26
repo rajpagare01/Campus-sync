@@ -4,6 +4,7 @@ import com.campussync.backend.Dto.EmailJobMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -12,11 +13,15 @@ public class EmailDeliveryService {
 
     private final JavaMailSender mailSender;
 
-    public EmailDeliveryService(JavaMailSender mailSender) {
+    public EmailDeliveryService(@Autowired(required = false) JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
 
     public void deliver(EmailJobMessage job) {
+        if (mailSender == null) {
+            log.warn("JavaMailSender is not configured. Simulating email delivery to {}: {}", job.to(), job.subject());
+            return;
+        }
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(job.to());
         message.setSubject(job.subject());
