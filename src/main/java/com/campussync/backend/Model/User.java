@@ -45,6 +45,7 @@ public class User extends SecurityProperties.User {
     private boolean active = true;
     private LocalDateTime deactivatedAt;
     private String deactivationReason;
+    @Column(columnDefinition = "TEXT")
     private String bio;
     private String profilePictureUrl;
     private String department;
