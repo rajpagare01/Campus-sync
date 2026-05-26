@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 @Service
-@ConditionalOnProperty(name = "app.jobs.mode", havingValue = "sync", matchIfMissing = true)
+@ConditionalOnProperty(name = "app.jobs.mode", havingValue = "direct", matchIfMissing = true)
 public class SyncJobPublisher implements JobPublisher {
 
     private final EmailDeliveryService emailDeliveryService;
