@@ -47,6 +47,8 @@ public class CacheConfig {
                         config.entryTtl(Duration.ofMinutes(30)))
                 .withCacheConfiguration("postCommentCounts",
                         config.entryTtl(Duration.ofMinutes(30)))
+                .withCacheConfiguration("eventsCache",
+                        config.entryTtl(Duration.ofMinutes(15)))
                 .build();
     }
 }
