@@ -70,9 +70,7 @@ public class EventService {
         Pageable pageable = PageRequest.of(page, size);
         Page<Event> eventPage = eventRepository.findByStatusOrderByDateAsc(EventStatus.PUBLISHED, pageable);
 
-        List<com.campussync.backend.Dto.EventResponse> content = eventPage.getContent().stream()
-                .map(this::mapToResponse)
-                .collect(java.util.stream.Collectors.toList());
+        List<com.campussync.backend.Dto.EventResponse> content = mapEventsToResponse(eventPage.getContent());
 
         return new PaginatedResponse<>(
                 content,
@@ -88,9 +86,7 @@ public class EventService {
 
     @Transactional(readOnly = true)
     public List<com.campussync.backend.Dto.EventResponse> getAllEvents() {
-        return eventRepository.findByStatusOrderByDateAsc(EventStatus.PUBLISHED).stream()
-                .map(this::mapToResponse)
-                .collect(java.util.stream.Collectors.toList());
+        return mapEventsToResponse(eventRepository.findByStatusOrderByDateAsc(EventStatus.PUBLISHED));
     }
 
     @Transactional // Bug #7 Fix: Ensure view count increment is atomic
@@ -188,9 +184,7 @@ public class EventService {
         String normalizedKeyword = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
         Page<Event> eventPage = eventRepository.searchEvents(normalizedKeyword, type, status, pageable);
 
-        List<com.campussync.backend.Dto.EventResponse> content = eventPage.getContent().stream()
-                .map(this::mapToResponse)
-                .collect(java.util.stream.Collectors.toList());
+        List<com.campussync.backend.Dto.EventResponse> content = mapEventsToResponse(eventPage.getContent());
 
         return new PaginatedResponse<>(
                 content,
@@ -207,9 +201,7 @@ public class EventService {
     @Transactional(readOnly = true)
     public List<com.campussync.backend.Dto.EventResponse> searchEvents(String keyword, EventType type, EventStatus status) {
         String normalizedKeyword = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
-        return eventRepository.searchEvents(normalizedKeyword, type, status).stream()
-                .map(this::mapToResponse)
-                .collect(java.util.stream.Collectors.toList());
+        return mapEventsToResponse(eventRepository.searchEvents(normalizedKeyword, type, status));
     }
 
     public EventAnalyticsResponse getEventAnalytics(Long eventId) {
@@ -250,9 +242,7 @@ public class EventService {
         Pageable pageable = PageRequest.of(page, size);
         Page<Event> eventPage = eventRepository.findByCreatedByIdOrderByDateDesc(creatorId, pageable);
 
-        List<com.campussync.backend.Dto.EventResponse> content = eventPage.getContent().stream()
-                .map(this::mapToResponse)
-                .collect(java.util.stream.Collectors.toList());
+        List<com.campussync.backend.Dto.EventResponse> content = mapEventsToResponse(eventPage.getContent());
 
         return new PaginatedResponse<>(
                 content,
@@ -267,6 +257,15 @@ public class EventService {
     }
 
     public com.campussync.backend.Dto.EventResponse mapToResponse(Event event) {
+        long registrations = registrationRepository.countByEventIdAndStatus(event.getId(), com.campussync.backend.Model.RegistrationStatus.REGISTERED);
+        List<EventRegistrationFieldResponse> fields = Collections.emptyList();
+        try {
+            fields = dynamicFieldService.getFields(event.getId());
+        } catch (Exception ignored) { }
+        return mapToResponse(event, registrations, fields);
+    }
+    
+    public com.campussync.backend.Dto.EventResponse mapToResponse(Event event, long registrations, List<EventRegistrationFieldResponse> fields) {
         com.campussync.backend.Dto.EventResponse response = new com.campussync.backend.Dto.EventResponse();
         response.setId(event.getId());
         response.setTitle(event.getTitle());
@@ -287,19 +286,12 @@ public class EventService {
         response.setCertificateEnabled(Boolean.TRUE.equals(event.getCertificateEnabled()));
 
         // Populate registration count
-        long registrations = registrationRepository.countByEventIdAndStatus(event.getId(), com.campussync.backend.Model.RegistrationStatus.REGISTERED);
         response.setRegistrationCount(registrations);
         response.setRegistrationsCount(registrations);
         response.setEventDate(event.getDate());
 
         // Feature 5: include dynamic registration fields
-        try {
-            List<EventRegistrationFieldResponse> fields =
-                    dynamicFieldService.getFields(event.getId());
-            response.setRegistrationFields(fields.isEmpty() ? Collections.emptyList() : fields);
-        } catch (Exception ignored) {
-            response.setRegistrationFields(Collections.emptyList());
-        }
+        response.setRegistrationFields(fields == null || fields.isEmpty() ? Collections.emptyList() : fields);
 
         if (event.getCreatedBy() != null) {
             User creator = event.getCreatedBy();
@@ -326,5 +318,24 @@ public class EventService {
         String email = auth.getName();
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    private List<com.campussync.backend.Dto.EventResponse> mapEventsToResponse(List<Event> events) {
+        if (events.isEmpty()) return Collections.emptyList();
+        
+        List<Long> eventIds = events.stream().map(Event::getId).collect(java.util.stream.Collectors.toList());
+        
+        java.util.Map<Long, Long> regMap = new java.util.HashMap<>();
+        List<Object[]> regCounts = registrationRepository.countByEventIdInAndStatus(eventIds, com.campussync.backend.Model.RegistrationStatus.REGISTERED);
+        for (Object[] row : regCounts) {
+            regMap.put((Long) row[0], (Long) row[1]);
+        }
+        
+        return events.stream().map(e -> {
+            long reg = regMap.getOrDefault(e.getId(), 0L);
+            List<EventRegistrationFieldResponse> fields = Collections.emptyList();
+            try { fields = dynamicFieldService.getFields(e.getId()); } catch (Exception ignored) { }
+            return mapToResponse(e, reg, fields);
+        }).collect(java.util.stream.Collectors.toList());
     }
 }

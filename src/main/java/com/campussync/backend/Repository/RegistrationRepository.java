@@ -24,6 +24,8 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
     void deleteByEventId(Long eventId);
     long countByEventId(Long eventId);
     long countByEventIdAndStatus(Long eventId, RegistrationStatus status);
+    @Query("SELECT r.event.id, COUNT(r) FROM Registration r WHERE r.event.id IN :eventIds AND r.status = :status GROUP BY r.event.id")
+    List<Object[]> countByEventIdInAndStatus(@Param("eventIds") List<Long> eventIds, @Param("status") RegistrationStatus status);
     long countByUserId(Long userId);
 
     @Query("""

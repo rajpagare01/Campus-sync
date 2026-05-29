@@ -8,6 +8,7 @@ import java.util.List;
 public interface EventRegistrationFieldRepository extends JpaRepository<EventRegistrationField, Long> {
 
     List<EventRegistrationField> findByEventIdOrderByDisplayOrderAsc(Long eventId);
+    List<EventRegistrationField> findByEventIdInOrderByDisplayOrderAsc(List<Long> eventIds);
 
     void deleteByEventId(Long eventId);
 
