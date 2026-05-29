@@ -17,11 +17,11 @@ public class Registration {
     private Long id;
 
     // Many registrations → one user
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
     // Many registrations → one event
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Event event;
 
     @Enumerated(EnumType.STRING)
