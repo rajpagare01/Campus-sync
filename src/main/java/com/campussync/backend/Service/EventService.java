@@ -68,14 +68,15 @@ public class EventService {
         return mapToResponse(savedEvent);
     }
 
+    @org.springframework.cache.annotation.Cacheable(value = "eventsCache")
     @Transactional(readOnly = true)
-    public PaginatedResponse<com.campussync.backend.Dto.EventResponse> getAllEvents(int page, int size) {
+    public com.campussync.backend.Dto.PaginatedEventResponse getAllEvents(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Event> eventPage = eventRepository.findByStatusOrderByDateAsc(EventStatus.PUBLISHED, pageable);
 
         List<com.campussync.backend.Dto.EventResponse> content = mapEventsToResponse(eventPage.getContent());
 
-        return new PaginatedResponse<>(
+        return new com.campussync.backend.Dto.PaginatedEventResponse(
                 content,
                 eventPage.getNumber(),
                 eventPage.getSize(),
@@ -87,6 +88,7 @@ public class EventService {
         );
     }
 
+    @org.springframework.cache.annotation.Cacheable(value = "eventsCache")
     @Transactional(readOnly = true)
     public List<com.campussync.backend.Dto.EventResponse> getAllEvents() {
         return mapEventsToResponse(eventRepository.findByStatusOrderByDateAsc(EventStatus.PUBLISHED));
@@ -181,15 +183,16 @@ public class EventService {
         return mapToResponse(savedEvent);
     }
 
+    @org.springframework.cache.annotation.Cacheable(value = "eventsCache")
     @Transactional(readOnly = true)
-    public PaginatedResponse<com.campussync.backend.Dto.EventResponse> searchEvents(String keyword, EventType type, EventStatus status, int page, int size) {
+    public com.campussync.backend.Dto.PaginatedEventResponse searchEvents(String keyword, EventType type, EventStatus status, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         String normalizedKeyword = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
         Page<Event> eventPage = eventRepository.searchEvents(normalizedKeyword, type, status, pageable);
 
         List<com.campussync.backend.Dto.EventResponse> content = mapEventsToResponse(eventPage.getContent());
 
-        return new PaginatedResponse<>(
+        return new com.campussync.backend.Dto.PaginatedEventResponse(
                 content,
                 eventPage.getNumber(),
                 eventPage.getSize(),
@@ -201,6 +204,7 @@ public class EventService {
         );
     }
 
+    @org.springframework.cache.annotation.Cacheable(value = "eventsCache")
     @Transactional(readOnly = true)
     public List<com.campussync.backend.Dto.EventResponse> searchEvents(String keyword, EventType type, EventStatus status) {
         String normalizedKeyword = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
