@@ -10,6 +10,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 
 import java.net.URI;
 import java.time.LocalDateTime;
@@ -57,6 +59,30 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ProblemDetail> handleAccessDeniedException(AccessDeniedException ex) {
         return toResponse(HttpStatus.FORBIDDEN, "Access denied: You do not have permission to perform this action", "access-denied");
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ProblemDetail> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex) {
+        log.warn("File upload rejected: size exceeds limit. Max allowed: {}", ex.getMaxUploadSize());
+        return toResponse(HttpStatus.PAYLOAD_TOO_LARGE,
+                "File is too large. Maximum allowed size is 50MB.",
+                "file-too-large");
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ProblemDetail> handleMultipartException(MultipartException ex) {
+        // ClientAbortException / EOFException = client disconnected before upload finished.
+        // This is a client-side abort, not a server bug — log at WARN, not ERROR.
+        Throwable cause = ex.getCause();
+        if (cause != null && (cause.getClass().getSimpleName().contains("ClientAbort")
+                || cause.getMessage() != null && cause.getMessage().contains("EOFException"))) {
+            log.warn("File upload aborted by client (connection dropped mid-upload). This is usually a client-side timeout or network issue.");
+        } else {
+            log.warn("Multipart upload failed: {}", ex.getMessage());
+        }
+        return toResponse(HttpStatus.BAD_REQUEST,
+                "File upload failed. The connection was lost during upload. Please try again with a stable connection or a smaller file.",
+                "upload-failed");
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

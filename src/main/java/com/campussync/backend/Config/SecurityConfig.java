@@ -32,6 +32,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/api/v1/files/**").authenticated()
+                        .requestMatchers("/files/**").authenticated()
                         .requestMatchers("/ws/notifications/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/payments/webhook").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/payments/webhook").permitAll()
