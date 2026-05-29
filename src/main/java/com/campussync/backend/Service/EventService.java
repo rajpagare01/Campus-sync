@@ -33,6 +33,7 @@ public class EventService {
     private final RealtimeService realtimeService;
     private final SearchIndexService searchIndexService;
     private final DynamicRegistrationFieldService dynamicFieldService;
+    private final com.campussync.backend.Repository.EventRegistrationFieldRepository fieldRepository;
 
     public EventService(EventRepository eventRepository,
                         UserRepository userRepository,
@@ -40,6 +41,7 @@ public class EventService {
                         NotificationService notificationService,
                         RealtimeService realtimeService,
                         SearchIndexService searchIndexService,
+                        com.campussync.backend.Repository.EventRegistrationFieldRepository fieldRepository,
                         @org.springframework.context.annotation.Lazy DynamicRegistrationFieldService dynamicFieldService) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
@@ -47,6 +49,7 @@ public class EventService {
         this.notificationService = notificationService;
         this.realtimeService = realtimeService;
         this.searchIndexService = searchIndexService;
+        this.fieldRepository = fieldRepository;
         this.dynamicFieldService = dynamicFieldService;
     }
 
@@ -331,10 +334,16 @@ public class EventService {
             regMap.put((Long) row[0], (Long) row[1]);
         }
         
+        java.util.Map<Long, List<EventRegistrationFieldResponse>> fieldsMap = new java.util.HashMap<>();
+        List<com.campussync.backend.Model.EventRegistrationField> allFields = fieldRepository.findByEventIdInOrderByDisplayOrderAsc(eventIds);
+        for (com.campussync.backend.Model.EventRegistrationField field : allFields) {
+            fieldsMap.computeIfAbsent(field.getEvent().getId(), k -> new java.util.ArrayList<>())
+                     .add(dynamicFieldService.toFieldResponse(field));
+        }
+
         return events.stream().map(e -> {
             long reg = regMap.getOrDefault(e.getId(), 0L);
-            List<EventRegistrationFieldResponse> fields = Collections.emptyList();
-            try { fields = dynamicFieldService.getFields(e.getId()); } catch (Exception ignored) { }
+            List<EventRegistrationFieldResponse> fields = fieldsMap.getOrDefault(e.getId(), Collections.emptyList());
             return mapToResponse(e, reg, fields);
         }).collect(java.util.stream.Collectors.toList());
     }
