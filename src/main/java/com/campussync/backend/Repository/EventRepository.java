@@ -23,6 +23,10 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     // 🆕 Pagination support for published events
     Page<Event> findByStatusOrderByDateAsc(EventStatus status, Pageable pageable);
 
+    // 🆕 Efficient query for feed: Only upcoming events, paginated
+    @Query("SELECT e FROM Event e WHERE e.status = :status AND e.date > :now ORDER BY e.date ASC")
+    Page<Event> findUpcomingEvents(@Param("status") EventStatus status, @Param("now") LocalDateTime now, Pageable pageable);
+
     // 🆕 Pagination support for search
     @Query("""
             SELECT e FROM Event e

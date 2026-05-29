@@ -9,6 +9,8 @@ import com.campussync.backend.Repository.LikeRepository;
 import com.campussync.backend.Repository.PostRepository;
 import com.campussync.backend.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.cache.annotation.Caching;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +31,10 @@ public class LikeService {
     private final RealtimeService realtimeService;
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "postLikeCounts", key = "#postId"),
+            @CacheEvict(value = "userPostLikes", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication()?.getName() + '-' + #postId")
+    })
     public LikeToggleResponse toggleLike(Long postId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
@@ -69,10 +76,12 @@ public class LikeService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "postLikeCounts", key = "#postId")
     public int getLikeCount(Long postId) {
         return (int) likeRepository.countByPostId(postId);
     }
 
+    @Cacheable(value = "userPostLikes", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication()?.getName() + '-' + #postId", unless = "#result == false")
     public boolean hasUserLikedPost(Long postId) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();

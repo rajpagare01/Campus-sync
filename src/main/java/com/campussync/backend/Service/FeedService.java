@@ -122,44 +122,15 @@ public class FeedService {
         );
     }
 
-    /**
-     * Get recent posts for feed
-     */
     private List<Post> getPostsForFeed(Pageable pageable) {
-        List<Post> posts = postRepository.findRecentPosts();
-
-        // Apply pagination manually
-        int start = (int) pageable.getOffset();
-        int end = Math.min(start + pageable.getPageSize(), posts.size());
-
-        if (start >= posts.size()) {
-            return new ArrayList<>();
-        }
-
-        return posts.subList(start, end);
+        return postRepository.findRecentPosts(pageable).getContent();
     }
 
     /**
      * Get upcoming events for feed
      */
     private List<Event> getEventsForFeed(Pageable pageable) {
-        // Get all events and filter upcoming ones
-        List<Event> allEvents = eventRepository.findByStatusOrderByDateAsc(EventStatus.PUBLISHED);
-
-        List<Event> upcomingEvents = allEvents.stream()
-                .filter(event -> event.getDate().isAfter(LocalDateTime.now()))
-                .sorted(Comparator.comparing(Event::getDate))
-                .collect(Collectors.toList());
-
-        // Apply pagination
-        int start = (int) pageable.getOffset();
-        int end = Math.min(start + pageable.getPageSize(), upcomingEvents.size());
-
-        if (start >= upcomingEvents.size()) {
-            return new ArrayList<>();
-        }
-
-        return upcomingEvents.subList(start, end);
+        return eventRepository.findUpcomingEvents(EventStatus.PUBLISHED, LocalDateTime.now(), pageable).getContent();
     }
 
     /**

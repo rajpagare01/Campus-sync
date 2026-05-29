@@ -41,6 +41,12 @@ public class CacheConfig {
                 .withCacheConfiguration("feedStats",
                         config
                                 .entryTtl(Duration.ofMinutes(5))) // Feed stats: 5 min
+                .withCacheConfiguration("postLikeCounts",
+                        config.entryTtl(Duration.ofMinutes(30)))
+                .withCacheConfiguration("userPostLikes",
+                        config.entryTtl(Duration.ofMinutes(30)))
+                .withCacheConfiguration("postCommentCounts",
+                        config.entryTtl(Duration.ofMinutes(30)))
                 .build();
     }
 }

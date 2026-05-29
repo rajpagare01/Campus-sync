@@ -31,6 +31,7 @@ public class CommentService {
     private final RealtimeService realtimeService;
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "postCommentCounts", key = "#postId")
     public CommentResponse addComment(Long postId, CommentRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
@@ -135,6 +136,7 @@ public class CommentService {
         commentRepository.delete(comment);
     }
 
+    @org.springframework.cache.annotation.Cacheable(value = "postCommentCounts", key = "#postId")
     public int getCommentCount(Long postId) {
         return (int) commentRepository.countByPostId(postId);
     }

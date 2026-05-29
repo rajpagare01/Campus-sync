@@ -14,6 +14,6 @@ public class LocalCacheConfig {
 
     @Bean
     public CacheManager cacheManager() {
-        return new ConcurrentMapCacheManager("userProfiles", "followStats", "feedStats");
+        return new ConcurrentMapCacheManager("userProfiles", "followStats", "feedStats", "postLikeCounts", "userPostLikes", "postCommentCounts");
     }
 }
