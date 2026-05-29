@@ -3,6 +3,7 @@ package com.campussync.backend.Repository;
 import com.campussync.backend.Model.Post;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -33,17 +34,21 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findByAuthorId(@Param("authorId") Long authorId);
 
     // 🆕 Pagination support for recent posts
+    @EntityGraph(attributePaths = {"author", "linkedEvent"})
     @Query("SELECT p FROM Post p ORDER BY p.createdAt DESC")
     Page<Post> findRecentPosts(Pageable pageable);
 
     // 🆕 Pagination support for posts by author
+    @EntityGraph(attributePaths = {"author", "linkedEvent"})
     @Query("SELECT p FROM Post p WHERE p.author.id = :authorId ORDER BY p.createdAt DESC")
     Page<Post> findByAuthorId(@Param("authorId") Long authorId, Pageable pageable);
 
     // 🆕 Pagination support for posts with media
+    @EntityGraph(attributePaths = {"author", "linkedEvent"})
     Page<Post> findByMediaUrlIsNotNullOrderByCreatedAtDesc(Pageable pageable);
 
     // 🆕 Pagination support for posts linked to event
+    @EntityGraph(attributePaths = {"author", "linkedEvent"})
     Page<Post> findByLinkedEventIdOrderByCreatedAtDesc(Long eventId, Pageable pageable);
 
     // Analytics queries
