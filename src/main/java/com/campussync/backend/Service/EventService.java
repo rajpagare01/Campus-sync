@@ -66,7 +66,6 @@ public class EventService {
     }
 
     @Transactional(readOnly = true)
-    @org.springframework.cache.annotation.Cacheable(value = "eventsCache", key = "#page + '-' + #size")
     public PaginatedResponse<com.campussync.backend.Dto.EventResponse> getAllEvents(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Event> eventPage = eventRepository.findByStatusOrderByDateAsc(EventStatus.PUBLISHED, pageable);

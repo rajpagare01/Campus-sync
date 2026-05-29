@@ -23,6 +23,7 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
     Optional<Registration> findByQrCode(String qrCode);
     void deleteByEventId(Long eventId);
     long countByEventId(Long eventId);
+    @org.springframework.cache.annotation.Cacheable(value = "eventsCache", key = "'registrations-' + #eventId + '-' + #status")
     long countByEventIdAndStatus(Long eventId, RegistrationStatus status);
     long countByUserId(Long userId);
 
