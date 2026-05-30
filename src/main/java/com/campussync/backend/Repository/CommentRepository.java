@@ -26,6 +26,9 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     long countByAuthorId(Long authorId);
 
+    @Query("SELECT c.post.id, COUNT(c) FROM Comment c WHERE c.post.id IN :postIds GROUP BY c.post.id")
+    List<Object[]> countByPostIdIn(@Param("postIds") List<Long> postIds);
+
     boolean existsByPostIdAndAuthorId(Long postId, Long authorId);
 
     @Query("SELECT c FROM Comment c WHERE c.id = :commentId OR c.parentComment.id = :commentId OR c.parentComment.parentComment.id = :commentId ORDER BY c.createdAt ASC")

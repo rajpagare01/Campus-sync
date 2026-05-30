@@ -7,7 +7,9 @@ import com.campussync.backend.Model.Event;
 import com.campussync.backend.Model.Post;
 import com.campussync.backend.Model.Role;
 import com.campussync.backend.Model.User;
+import com.campussync.backend.Repository.CommentRepository;
 import com.campussync.backend.Repository.EventRepository;
+import com.campussync.backend.Repository.LikeRepository;
 import com.campussync.backend.Repository.PostRepository;
 import com.campussync.backend.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,8 @@ public class PostService {
     private final CommentService commentService;
     private final RealtimeService realtimeService;
     private final SearchIndexService searchIndexService;
+    private final LikeRepository likeRepository;
+    private final CommentRepository commentRepository;
 
     @Transactional
     public PostResponse createPost(PostRequest request) {
@@ -59,9 +63,7 @@ public class PostService {
         Pageable pageable = PageRequest.of(page, size);
         Page<Post> postPage = postRepository.findRecentPosts(pageable);
 
-        List<PostResponse> content = postPage.getContent().stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        List<PostResponse> content = mapPostsToResponse(postPage.getContent());
 
         return new PaginatedResponse<>(
                 content,
@@ -78,9 +80,7 @@ public class PostService {
     @Transactional(readOnly = true)
     public List<PostResponse> getAllPosts() {
         List<Post> posts = postRepository.findRecentPosts();
-        return posts.stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        return mapPostsToResponse(posts);
     }
 
     public PostResponse getPostById(Long id) {
@@ -121,9 +121,7 @@ public class PostService {
         Pageable pageable = PageRequest.of(page, size);
         Page<Post> postPage = postRepository.findByAuthorId(authorId, pageable);
 
-        List<PostResponse> content = postPage.getContent().stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        List<PostResponse> content = mapPostsToResponse(postPage.getContent());
 
         return new PaginatedResponse<>(
                 content,
@@ -140,9 +138,7 @@ public class PostService {
     @Transactional(readOnly = true)
     public List<PostResponse> getPostsByAuthor(Long authorId) {
         List<Post> posts = postRepository.findByAuthorId(authorId);
-        return posts.stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        return mapPostsToResponse(posts);
     }
 
     @Transactional(readOnly = true)
@@ -150,9 +146,7 @@ public class PostService {
         Pageable pageable = PageRequest.of(page, size);
         Page<Post> postPage = postRepository.findByMediaUrlIsNotNullOrderByCreatedAtDesc(pageable);
 
-        List<PostResponse> content = postPage.getContent().stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        List<PostResponse> content = mapPostsToResponse(postPage.getContent());
 
         return new PaginatedResponse<>(
                 content,
@@ -171,9 +165,7 @@ public class PostService {
         Pageable pageable = PageRequest.of(page, size);
         Page<Post> postPage = postRepository.findByLinkedEventIdOrderByCreatedAtDesc(eventId, pageable);
 
-        List<PostResponse> content = postPage.getContent().stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        List<PostResponse> content = mapPostsToResponse(postPage.getContent());
 
         return new PaginatedResponse<>(
                 content,
@@ -215,6 +207,13 @@ public class PostService {
     }
 
     public PostResponse mapToResponse(Post post) {
+        int likes = likeService.getLikeCount(post.getId());
+        int comments = commentService.getCommentCount(post.getId());
+        boolean liked = likeService.hasUserLikedPost(post.getId());
+        return mapToResponse(post, likes, comments, liked);
+    }
+
+    public PostResponse mapToResponse(Post post, int likes, int comments, boolean liked) {
         PostResponse response = new PostResponse();
         response.setId(post.getId());
         response.setContent(post.getContent());
@@ -254,10 +253,6 @@ public class PostService {
             response.setEventTitle(post.getLinkedEvent().getTitle());
         }
 
-        int likes = likeService.getLikeCount(post.getId());
-        int comments = commentService.getCommentCount(post.getId());
-        boolean liked = likeService.hasUserLikedPost(post.getId());
-
         response.setLikeCount(likes);
         response.setLikesCount(likes);
         response.setCommentCount(comments);
@@ -266,5 +261,40 @@ public class PostService {
         response.setLiked(liked);
 
         return response;
+    }
+
+    private List<PostResponse> mapPostsToResponse(List<Post> posts) {
+        if (posts.isEmpty()) return new java.util.ArrayList<>();
+        List<Long> postIds = posts.stream().map(Post::getId).collect(Collectors.toList());
+        
+        java.util.Map<Long, Integer> likeMap = new java.util.HashMap<>();
+        for (Object[] row : likeRepository.countByPostIdIn(postIds)) {
+            likeMap.put((Long) row[0], ((Number) row[1]).intValue());
+        }
+        
+        java.util.Map<Long, Integer> commentMap = new java.util.HashMap<>();
+        for (Object[] row : commentRepository.countByPostIdIn(postIds)) {
+            commentMap.put((Long) row[0], ((Number) row[1]).intValue());
+        }
+        
+        java.util.Set<Long> userLikedPostIds = new java.util.HashSet<>();
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && !auth.getName().equals("anonymousUser")) {
+                User currentUser = userRepository.findByEmail(auth.getName()).orElse(null);
+                if (currentUser != null) {
+                    for (com.campussync.backend.Model.Like like : likeRepository.findByUserIdAndPostIdIn(currentUser.getId(), postIds)) {
+                        userLikedPostIds.add(like.getPost().getId());
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        return posts.stream().map(post -> {
+            int likes = likeMap.getOrDefault(post.getId(), 0);
+            int comments = commentMap.getOrDefault(post.getId(), 0);
+            boolean liked = userLikedPostIds.contains(post.getId());
+            return mapToResponse(post, likes, comments, liked);
+        }).collect(Collectors.toList());
     }
 }

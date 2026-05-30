@@ -30,6 +30,12 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     // Bug #10 Fix: efficient count without fetching all records
     long countByUserId(Long userId);
 
+    @Query("SELECT l.post.id, COUNT(l) FROM Like l WHERE l.post.id IN :postIds GROUP BY l.post.id")
+    List<Object[]> countByPostIdIn(@Param("postIds") List<Long> postIds);
+
+    @Query("SELECT l FROM Like l WHERE l.user.id = :userId AND l.post.id IN :postIds")
+    List<Like> findByUserIdAndPostIdIn(@Param("userId") Long userId, @Param("postIds") List<Long> postIds);
+
     long countByCreatedAtAfter(LocalDateTime date);
 
     long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);

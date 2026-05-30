@@ -9,6 +9,8 @@ import com.campussync.backend.Model.Post;
 import com.campussync.backend.Model.User;
 import com.campussync.backend.Repository.EventRepository;
 import com.campussync.backend.Repository.PostRepository;
+import com.campussync.backend.Repository.CommentRepository;
+import com.campussync.backend.Repository.LikeRepository;
 import com.campussync.backend.Repository.RegistrationRepository;
 import com.campussync.backend.Repository.UserRepository;
 import lombok.AllArgsConstructor;
@@ -41,6 +43,8 @@ public class FeedService {
     private final FollowService followService;
     private final UserRepository userRepository;
     private final RegistrationRepository registrationRepository;
+    private final LikeRepository likeRepository;
+    private final CommentRepository commentRepository;
 
     /**
      * Get personalized home feed combining posts and events
@@ -137,6 +141,27 @@ public class FeedService {
      * Convert posts to feed items
      */
     private List<FeedItem> convertPostsToFeedItems(List<Post> posts, List<Long> followedIds) {
+        if (posts.isEmpty()) return new ArrayList<>();
+        List<Long> postIds = posts.stream().map(Post::getId).collect(Collectors.toList());
+        
+        java.util.Map<Long, Integer> likeMap = new java.util.HashMap<>();
+        for (Object[] row : likeRepository.countByPostIdIn(postIds)) {
+            likeMap.put((Long) row[0], ((Number) row[1]).intValue());
+        }
+        
+        java.util.Map<Long, Integer> commentMap = new java.util.HashMap<>();
+        for (Object[] row : commentRepository.countByPostIdIn(postIds)) {
+            commentMap.put((Long) row[0], ((Number) row[1]).intValue());
+        }
+        
+        java.util.Set<Long> userLikedPostIds = new java.util.HashSet<>();
+        User currentUser = getCurrentUser();
+        if (currentUser != null) {
+            for (com.campussync.backend.Model.Like like : likeRepository.findByUserIdAndPostIdIn(currentUser.getId(), postIds)) {
+                userLikedPostIds.add(like.getPost().getId());
+            }
+        }
+
         return posts.stream().map(post -> {
             FeedItem item = new FeedItem();
             item.setType("POST");
@@ -147,9 +172,10 @@ public class FeedService {
             item.setAuthorName(post.getAuthor().getName());
             item.setAuthorId(post.getAuthor().getId());
             item.setMediaUrl(post.getMediaUrl());
-            int likes = likeService.getLikeCount(post.getId());
-            int comments = commentService.getCommentCount(post.getId());
-            boolean liked = likeService.hasUserLikedPost(post.getId());
+            
+            int likes = likeMap.getOrDefault(post.getId(), 0);
+            int comments = commentMap.getOrDefault(post.getId(), 0);
+            boolean liked = userLikedPostIds.contains(post.getId());
             
             item.setLikeCount(likes);
             item.setLikesCount(likes);
@@ -182,6 +208,13 @@ public class FeedService {
 
 
     private List<FeedItem> convertEventsToFeedItems(List<Event> events, List<Long> followedIds) {
+        if (events.isEmpty()) return new ArrayList<>();
+        List<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toList());
+        java.util.Map<Long, Long> regMap = new java.util.HashMap<>();
+        for (Object[] row : registrationRepository.countByEventIdInAndStatus(eventIds, com.campussync.backend.Model.RegistrationStatus.REGISTERED)) {
+            regMap.put((Long) row[0], ((Number) row[1]).longValue());
+        }
+
         return events.stream().map(event -> {
             FeedItem item = new FeedItem();
             item.setType("EVENT");
@@ -198,7 +231,7 @@ public class FeedService {
             item.setPaid(event.getPaid());
             item.setPrice(event.getPrice());
             item.setImageUrl(event.getImageUrl());
-            item.setRegistrationCount(registrationRepository.countByEventIdAndStatus(event.getId(), com.campussync.backend.Model.RegistrationStatus.REGISTERED));
+            item.setRegistrationCount(regMap.getOrDefault(event.getId(), 0L));
 
             // Populate author details
             User creator = event.getCreatedBy();
@@ -243,9 +276,7 @@ public class FeedService {
     @Cacheable(value = "feedStats", unless = "#result == null")
     public FeedStats getFeedStats() {
         long totalPosts = postRepository.count();
-        long totalEvents = eventRepository.findByStatusOrderByDateAsc(EventStatus.PUBLISHED).stream()
-                .filter(event -> event.getDate().isAfter(LocalDateTime.now()))
-                .count();
+        long totalEvents = eventRepository.countByStatusAndDateAfter(EventStatus.PUBLISHED, LocalDateTime.now());
         long paidEvents = eventRepository.countByPaidTrue();
 
         return new FeedStats(totalPosts, totalEvents, paidEvents);

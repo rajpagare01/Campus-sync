@@ -90,6 +90,20 @@ k6 run -e BASE_URL=https://campus-sync-9luf.onrender.com \
 
 ---
 
+## Test 4: Frontend SPA
+```bash
+k6 run -e FRONTEND_URL=https://your-deployed-frontend.com k6/04_frontend_test.js
+```
+**What it tests:**
+- `GET /` (index.html)
+- `GET /login`
+
+**Load:** Ramp up to 50 concurrent users simulating page loads.
+
+**Fix issues if:** Frontend P95 > 1s (Ensure static assets are cached by a CDN)
+
+---
+
 ## Getting a JWT Token for Tests
 ```bash
 # Login once and copy the accessToken

@@ -6,6 +6,7 @@ import com.campussync.backend.Model.EventType;
 import com.campussync.backend.Model.RegistrationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,13 +22,16 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     List<Event> findByStatusOrderByDateAsc(EventStatus status);
 
     // 🆕 Pagination support for published events
+    @EntityGraph(attributePaths = {"createdBy"})
     Page<Event> findByStatusOrderByDateAsc(EventStatus status, Pageable pageable);
 
     // 🆕 Efficient query for feed: Only upcoming events, paginated
+    @EntityGraph(attributePaths = {"createdBy"})
     @Query("SELECT e FROM Event e WHERE e.status = :status AND e.date > :now ORDER BY e.date ASC")
     Page<Event> findUpcomingEvents(@Param("status") EventStatus status, @Param("now") LocalDateTime now, Pageable pageable);
 
     // 🆕 Pagination support for search
+    @EntityGraph(attributePaths = {"createdBy"})
     @Query("""
             SELECT e FROM Event e
             WHERE (:keyword IS NULL OR
@@ -44,6 +48,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
                             Pageable pageable);
 
     // 🆕 Non-paginated search for legacy support
+    @EntityGraph(attributePaths = {"createdBy"})
     @Query("""
             SELECT e FROM Event e
             WHERE (:keyword IS NULL OR
@@ -74,6 +79,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     long countByDateAfter(LocalDateTime date);
     long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+    long countByStatusAndDateAfter(EventStatus status, LocalDateTime date);
 
     Page<Event> findByVenueContainsIgnoreCaseOrderByDateDesc(String venue, Pageable pageable);
     
