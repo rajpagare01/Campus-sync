@@ -48,6 +48,9 @@ class EventCreatorControllerProblemDetailTest {
     @MockBean
     private UserRepository userRepository;
 
+    @MockBean
+    private com.campussync.backend.Service.DynamicRegistrationFieldService dynamicRegistrationFieldService;
+
 
     @Test
     @WithMockUser(username = "creator@example.com", roles = "SOCIETY")

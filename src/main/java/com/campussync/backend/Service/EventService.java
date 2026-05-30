@@ -95,8 +95,10 @@ public class EventService {
     public com.campussync.backend.Dto.EventResponse getEventById(Long eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
-        event.setViewsCount(event.getViewsCount() + 1);
-        return mapToResponse(eventRepository.save(event));
+        // Atomic increment to avoid row-lock contention under concurrent load
+        eventRepository.incrementViewsCount(eventId);
+        event.setViewsCount(event.getViewsCount() + 1); // reflect in response without re-fetch
+        return mapToResponse(event);
     }
 
     public com.campussync.backend.Dto.EventResponse updateEvent(Long eventId, Event updatedEvent) {

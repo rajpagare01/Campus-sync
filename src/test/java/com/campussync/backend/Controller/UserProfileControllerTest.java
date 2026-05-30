@@ -56,14 +56,14 @@ public class UserProfileControllerTest {
 
         mockMvc.perform(get("/users/profile"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Test User"))
-                .andExpect(jsonPath("$.email").value("student@example.com"));
+                .andExpect(jsonPath("$.data.name").value("Test User"))
+                .andExpect(jsonPath("$.data.email").value("student@example.com"));
     }
 
     @Test
     void getMyProfile_ShouldReturnUnauthorized_WhenNotAuthenticated() throws Exception {
         mockMvc.perform(get("/users/profile"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -76,7 +76,7 @@ public class UserProfileControllerTest {
 
         mockMvc.perform(get("/users/2/profile"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Public User"));
+                .andExpect(jsonPath("$.data.name").value("Public User"));
     }
 
     @Test
@@ -97,8 +97,8 @@ public class UserProfileControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Updated Name"))
-                .andExpect(jsonPath("$.bio").value("New bio"));
+                .andExpect(jsonPath("$.data.name").value("Updated Name"))
+                .andExpect(jsonPath("$.data.bio").value("New bio"));
     }
 
     @Test
@@ -112,6 +112,6 @@ public class UserProfileControllerTest {
 
         mockMvc.perform(get("/users/activity"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].activityType").value("LIKE"));
+                .andExpect(jsonPath("$.data[0].activityType").value("LIKE"));
     }
 }

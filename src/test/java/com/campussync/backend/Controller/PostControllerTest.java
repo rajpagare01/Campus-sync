@@ -62,10 +62,11 @@ public class PostControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").value("New Post"));
+                .andExpect(jsonPath("$.data.content").value("New Post"));
     }
 
     @Test
+    @WithMockUser
     void getAllPosts_ShouldReturnPaginatedPosts() throws Exception {
         PaginatedResponse<PostResponse> response = new PaginatedResponse<>();
         response.setContent(List.of(new PostResponse()));
@@ -73,10 +74,11 @@ public class PostControllerTest {
 
         mockMvc.perform(get("/posts?page=0&size=20"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray());
+                .andExpect(jsonPath("$.data.content").isArray());
     }
 
     @Test
+    @WithMockUser
     void getPostById_ShouldReturnPost() throws Exception {
         PostResponse response = new PostResponse();
         response.setId(1L);
@@ -84,7 +86,7 @@ public class PostControllerTest {
 
         mockMvc.perform(get("/posts/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1L));
+                .andExpect(jsonPath("$.data.id").value(1L));
     }
 
     @Test
@@ -103,10 +105,11 @@ public class PostControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").value("Updated Post"));
+                .andExpect(jsonPath("$.data.content").value("Updated Post"));
     }
 
     @Test
+    @WithMockUser
     void getPostsByAuthor_ShouldReturnPaginatedPosts() throws Exception {
         PaginatedResponse<PostResponse> response = new PaginatedResponse<>();
         response.setContent(List.of(new PostResponse()));
@@ -114,10 +117,11 @@ public class PostControllerTest {
 
         mockMvc.perform(get("/posts/author/1?page=0&size=20"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray());
+                .andExpect(jsonPath("$.data.content").isArray());
     }
 
     @Test
+    @WithMockUser
     void getPostsWithMedia_ShouldReturnPaginatedPosts() throws Exception {
         PaginatedResponse<PostResponse> response = new PaginatedResponse<>();
         response.setContent(List.of(new PostResponse()));
@@ -125,7 +129,7 @@ public class PostControllerTest {
 
         mockMvc.perform(get("/posts/media?page=0&size=20"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray());
+                .andExpect(jsonPath("$.data.content").isArray());
     }
 
     @Test
@@ -133,6 +137,6 @@ public class PostControllerTest {
     void deletePost_ShouldReturnSuccessString() throws Exception {
         mockMvc.perform(delete("/posts/1"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Post deleted successfully"));
+                .andExpect(jsonPath("$.data").value("Post deleted successfully"));
     }
 }

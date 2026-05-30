@@ -132,18 +132,11 @@ class EventParticipantServiceTest {
     }
 
     @Test
-    void generateCertificateRejectsParticipantWithoutAttendance() {
+    void generateCertificateRejectsWhenCertificatesNotEnabled() {
         User owner = ownerUser();
         User participant = participantUser();
         Event event = managedEvent(owner);
-
-        Registration registration = new Registration();
-        registration.setId(44L);
-        registration.setUser(participant);
-        registration.setEvent(event);
-        registration.setStatus(RegistrationStatus.REGISTERED);
-        registration.setAttended(false);
-        registration.setAttendanceStatus(AttendanceStatus.NOT_CHECKED_IN);
+        // NOTE: event.getCertificateEnabled() is null (false) by default — no need to set it
 
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("owner@example.com", null)
@@ -152,11 +145,12 @@ class EventParticipantServiceTest {
         when(userRepository.findByEmail("owner@example.com")).thenReturn(Optional.of(owner));
         when(userRepository.findById(2L)).thenReturn(Optional.of(participant));
         when(eventRepository.findById(12L)).thenReturn(Optional.of(event));
-        when(registrationRepository.findByUserIdAndEventId(2L, 12L)).thenReturn(Optional.of(registration));
+        // registrationRepository NOT stubbed — it is never reached because the service
+        // throws ForbiddenOperationException at the certificateEnabled check first
 
         assertThatThrownBy(() -> eventParticipantService.generateCertificate(12L, 2L))
                 .isInstanceOf(ForbiddenOperationException.class)
-                .hasMessage("Certificate is available only for attended participants");
+                .hasMessage("Certificates are not enabled for this event");
 
         verify(certificateService, never()).generateCertificate(any(), any());
     }
