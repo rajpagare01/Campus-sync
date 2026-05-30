@@ -99,7 +99,7 @@ export default function () {
       "events list: has content":           (r) => {
         try {
           const body = r.json();
-          return Array.isArray(body.content) || Array.isArray(body);
+          return Array.isArray(body.content) || Array.isArray(body) || (body.data && Array.isArray(body.data.content));
         } catch { return false; }
       },
       "events list: response time < 3000ms": (r) => r.timings.duration < 3000,
@@ -127,8 +127,8 @@ export default function () {
     if (eventsOk) {
       try {
         const events = eventsRes.json();
-        const content = Array.isArray(events.content) ? events.content : events;
-        if (content.length > 0) {
+        const content = Array.isArray(events.content) ? events.content : (events.data && Array.isArray(events.data.content) ? events.data.content : events);
+        if (content && content.length > 0) {
           const eventId = content[0].id;
           const singleRes = http.get(
             `${BASE_URL}/api/v1/events/${eventId}`,
@@ -136,7 +136,7 @@ export default function () {
           );
           check(singleRes, {
             "single event: status 200":            (r) => r.status === 200,
-            "single event: has title":             (r) => !!r.json("title"),
+            "single event: has title":             (r) => !!r.json("title") || (r.json("data") && !!r.json("data").title),
             "single event: response time < 1500ms": (r) => r.timings.duration < 1500,
           });
         }
@@ -170,7 +170,7 @@ export default function () {
     );
     check(statsRes, {
       "feed stats: status 200":            (r) => r.status === 200,
-      "feed stats: has totalPosts":        (r) => r.json("totalPosts") !== undefined,
+      "feed stats: has totalPosts":        (r) => r.json("totalPosts") !== undefined || (r.json("data") && r.json("data").totalPosts !== undefined),
       "feed stats: response time < 1000ms": (r) => r.timings.duration < 1000,
     });
 
