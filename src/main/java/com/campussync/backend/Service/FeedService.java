@@ -273,7 +273,6 @@ public class FeedService {
      * Get feed statistics
      */
     @Transactional(readOnly = true)
-    @Cacheable(value = "feedStats", unless = "#result == null")
     public FeedStats getFeedStats() {
         long totalPosts = postRepository.count();
         long totalEvents = eventRepository.countByStatusAndDateAfter(EventStatus.PUBLISHED, LocalDateTime.now());

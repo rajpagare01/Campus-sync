@@ -53,7 +53,6 @@ public class EventService {
         this.dynamicFieldService = dynamicFieldService;
     }
 
-    @org.springframework.cache.annotation.CacheEvict(value = "eventsCache", allEntries = true)
     public com.campussync.backend.Dto.EventResponse createEvent(Event event) {
         User creator = getCurrentUser();
 
@@ -68,7 +67,6 @@ public class EventService {
         return mapToResponse(savedEvent);
     }
 
-    @org.springframework.cache.annotation.Cacheable(value = "eventsCache")
     @Transactional(readOnly = true)
     public com.campussync.backend.Dto.PaginatedEventResponse getAllEvents(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
@@ -88,7 +86,6 @@ public class EventService {
         );
     }
 
-    @org.springframework.cache.annotation.Cacheable(value = "eventsCache")
     @Transactional(readOnly = true)
     public List<com.campussync.backend.Dto.EventResponse> getAllEvents() {
         return mapEventsToResponse(eventRepository.findByStatusOrderByDateAsc(EventStatus.PUBLISHED));
@@ -102,7 +99,6 @@ public class EventService {
         return mapToResponse(eventRepository.save(event));
     }
 
-    @org.springframework.cache.annotation.CacheEvict(value = "eventsCache", allEntries = true)
     public com.campussync.backend.Dto.EventResponse updateEvent(Long eventId, Event updatedEvent) {
         User currentUser = getCurrentUser();
         Event existing = eventRepository.findById(eventId)
@@ -141,7 +137,6 @@ public class EventService {
         return mapToResponse(savedEvent);
     }
 
-    @org.springframework.cache.annotation.CacheEvict(value = "eventsCache", allEntries = true)
     public String deleteEvent(Long eventId) {
         User currentUser = getCurrentUser();
         Event event = eventRepository.findById(eventId)
@@ -161,7 +156,6 @@ public class EventService {
         return "Event deleted successfully";
     }
 
-    @org.springframework.cache.annotation.CacheEvict(value = "eventsCache", allEntries = true)
     public com.campussync.backend.Dto.EventResponse updateEventStatus(Long eventId, EventStatus status) {
         User currentUser = getCurrentUser();
         Event event = eventRepository.findById(eventId)
@@ -183,7 +177,6 @@ public class EventService {
         return mapToResponse(savedEvent);
     }
 
-    @org.springframework.cache.annotation.Cacheable(value = "eventsCache")
     @Transactional(readOnly = true)
     public com.campussync.backend.Dto.PaginatedEventResponse searchEvents(String keyword, EventType type, EventStatus status, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
@@ -204,7 +197,6 @@ public class EventService {
         );
     }
 
-    @org.springframework.cache.annotation.Cacheable(value = "eventsCache")
     @Transactional(readOnly = true)
     public List<com.campussync.backend.Dto.EventResponse> searchEvents(String keyword, EventType type, EventStatus status) {
         String normalizedKeyword = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
