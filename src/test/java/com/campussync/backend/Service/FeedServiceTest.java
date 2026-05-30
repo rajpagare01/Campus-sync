@@ -4,8 +4,12 @@ import com.campussync.backend.Dto.FeedItem;
 import com.campussync.backend.Model.EventStatus;
 import com.campussync.backend.Model.Post;
 import com.campussync.backend.Model.User;
+import com.campussync.backend.Repository.CommentRepository;
 import com.campussync.backend.Repository.EventRepository;
+import com.campussync.backend.Repository.LikeRepository;
 import com.campussync.backend.Repository.PostRepository;
+import com.campussync.backend.Repository.RegistrationRepository;
+import com.campussync.backend.Repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -13,7 +17,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -28,10 +37,19 @@ class FeedServiceTest {
     private EventRepository eventRepository;
 
     @Mock
-    private LikeService likeService;
+    private LikeRepository likeRepository;
 
     @Mock
-    private CommentService commentService;
+    private CommentRepository commentRepository;
+    
+    @Mock
+    private UserRepository userRepository;
+    
+    @Mock
+    private RegistrationRepository registrationRepository;
+    
+    @Mock
+    private FollowService followService;
 
     @InjectMocks
     private FeedService feedService;
@@ -48,23 +66,22 @@ class FeedServiceTest {
         post.setContent("Campus update");
         post.setCreatedAt(LocalDateTime.now().minusMinutes(5));
 
-        when(postRepository.findRecentPosts()).thenReturn(List.of(post));
-        when(commentService.getCommentCount(1L)).thenReturn(3);
-        when(likeService.getLikeCount(1L)).thenReturn(2);
-        when(likeService.hasUserLikedPost(1L)).thenReturn(true);
+        when(postRepository.findRecentPosts(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(post)));
+        when(likeRepository.countByPostIdIn(any())).thenReturn(Collections.singletonList(new Object[]{1L, 2L}));
+        when(commentRepository.countByPostIdIn(any())).thenReturn(Collections.singletonList(new Object[]{1L, 3L}));
 
         var feed = feedService.getHomeFeed(0, 20, "posts", "date").getContent();
 
         assertThat(feed).hasSize(1);
         assertThat(feed.get(0).getCommentCount()).isEqualTo(3);
         assertThat(feed.get(0).getLikeCount()).isEqualTo(2);
-        assertThat(feed.get(0).getIsLikedByCurrentUser()).isTrue();
+        assertThat(feed.get(0).getIsLikedByCurrentUser()).isFalse();
     }
 
     @Test
     void feedStatsStillCountsPublishedUpcomingEvents() {
         when(postRepository.count()).thenReturn(5L);
-        when(eventRepository.findByStatusOrderByDateAsc(EventStatus.PUBLISHED)).thenReturn(List.of());
+        when(eventRepository.countByStatusAndDateAfter(eq(EventStatus.PUBLISHED), any(LocalDateTime.class))).thenReturn(0L);
         when(eventRepository.countByPaidTrue()).thenReturn(1L);
 
         FeedService.FeedStats stats = feedService.getFeedStats();

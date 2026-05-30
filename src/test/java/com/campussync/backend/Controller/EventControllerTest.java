@@ -1,6 +1,7 @@
 package com.campussync.backend.Controller;
 
 import com.campussync.backend.Dto.EventResponse;
+import com.campussync.backend.Dto.PaginatedEventResponse;
 import com.campussync.backend.Dto.PaginatedResponse;
 import com.campussync.backend.Model.Event;
 import com.campussync.backend.Model.EventStatus;
@@ -49,13 +50,13 @@ public class EventControllerTest {
 
     @Test
     void getAllEvents_ShouldReturnPaginatedEvents() throws Exception {
-        PaginatedResponse<EventResponse> response = new PaginatedResponse<>();
+        PaginatedEventResponse response = new PaginatedEventResponse();
         response.setContent(List.of(new EventResponse()));
         when(eventService.getAllEvents(anyInt(), anyInt())).thenReturn(response);
 
         mockMvc.perform(get("/events?page=0&size=20"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray());
+                .andExpect(jsonPath("$.data.content").isArray());
     }
 
     @Test
@@ -67,8 +68,8 @@ public class EventControllerTest {
 
         mockMvc.perform(get("/events/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.title").value("Test Event"));
+                .andExpect(jsonPath("$.data.id").value(1L))
+                .andExpect(jsonPath("$.data.title").value("Test Event"));
     }
 
     @Test
@@ -87,7 +88,7 @@ public class EventControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(event)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title").value("Updated Title"));
+                .andExpect(jsonPath("$.data.title").value("Updated Title"));
     }
 
     @Test
@@ -97,7 +98,7 @@ public class EventControllerTest {
 
         mockMvc.perform(delete("/events/1"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Event deleted successfully"));
+                .andExpect(jsonPath("$.data").value("Event deleted successfully"));
     }
 
     @Test
@@ -111,17 +112,17 @@ public class EventControllerTest {
 
         mockMvc.perform(patch("/events/1/status?status=PUBLISHED"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("PUBLISHED"));
+                .andExpect(jsonPath("$.data.status").value("PUBLISHED"));
     }
 
     @Test
     void searchEvents_ShouldReturnPaginatedResults() throws Exception {
-        PaginatedResponse<EventResponse> response = new PaginatedResponse<>();
+        PaginatedEventResponse response = new PaginatedEventResponse();
         response.setContent(List.of(new EventResponse()));
         when(eventService.searchEvents(eq("tech"), any(), any(), anyInt(), anyInt())).thenReturn(response);
 
         mockMvc.perform(get("/events/search?keyword=tech"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray());
+                .andExpect(jsonPath("$.data.content").isArray());
     }
 }

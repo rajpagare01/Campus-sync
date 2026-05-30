@@ -110,7 +110,7 @@ class EventServiceTest {
 
         var response = eventService.updateEventStatus(10L, EventStatus.PUBLISHED);
 
-        assertThat(response.getStatus()).isEqualTo(EventStatus.PUBLISHED.name());
+        assertThat(response.getStatus()).isEqualTo(EventStatus.PUBLISHED);
         verify(notificationService).notifyEventUpdate(any(Event.class), eq("Status changed to PUBLISHED"));
     }
 }

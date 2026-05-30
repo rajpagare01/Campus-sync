@@ -11,7 +11,6 @@ import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.boot.autoconfigure.security.SecurityProperties;
 
 import java.time.LocalDateTime;
 
@@ -19,7 +18,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity(name = "users")
-public class User extends SecurityProperties.User {
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -39,6 +38,7 @@ public class User extends SecurityProperties.User {
     private String verificationCode;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "\"role\"")
     private Role role;
 
     private Integer tokenVersion = 0;
@@ -49,6 +49,7 @@ public class User extends SecurityProperties.User {
     private String bio;
     private String profilePictureUrl;
     private String department;
+    @Column(name = "\"year\"")
     private String year;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
